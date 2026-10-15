@@ -1,0 +1,322 @@
+====================================================================================================
+                            Baltimore Multi-Dataset Intelligence Report
+               Open Baltimore data · calendar year 2025 · generated 2026-10-09 08:30
+====================================================================================================
+
+  Source: Baltimore City Open Data Portal (data.baltimorecity.gov). Four independently maintained
+  city systems are reconciled on two shared keys, a normalised neighborhood name and a
+  hundred-block street address. All five questions below depend on at least two datasets joined on
+  those keys.
+
+  Datasets ingested (raw files → typed records)
+  Dataset                  File                                Format   Raw rows     Kept  Filtered  Block-geocoded  Parse time
+  -----------------------  ----------------------------------  -------  --------  -------  --------  --------------  ----------
+  Crime (NIBRS Group A)    crime_2025.csv.gz                   CSV        54,175   53,882       293           99.2%      167 ms
+  311 Service Requests     311_requests_2025.csv.gz            CSV       931,323  931,279        44           66.1%     1122 ms
+  Liquor Licenses          liquor_licenses.csv.gz              CSV        30,968    1,125    29,843           99.7%      110 ms
+  Vacant Building Notices  vacant_building_notices.geojson.gz  GeoJSON    11,396   11,373        23          100.0%      107 ms
+
+====================================================================================================
+ Q1. Vacant Buildings & Violent Crime
+ Stakeholder: Mayor's Office & Dept. of Housing and Community Development (DHCD)   (computed in 750µs)
+----------------------------------------------------------------------------------------------------
+  Do neighborhoods and blocks with more open vacant-building notices experience more violent
+  crime, and which neighborhoods should be first in line for coordinated demolition/rehab +
+  public-safety investment?
+
+  Join: 11,373 open vacant notices and 53,882 2025 crime incidents matched on normalised
+  neighborhood name (278 neighborhoods) and on hundred-block address (28,429 blocks).
+
+  Neighborhoods grouped by open vacant-building notices
+  Vacancy tier     Nbhds  Vacants  Avg violent crimes  Avg shootings
+  ---------------  -----  -------  ------------------  -------------
+  No open vacants     65        0                 8.1            0.2
+  Low (1–3)           64      122                16.2            0.4
+  Medium (4–12)       45      336                26.2            0.6
+  High (13–48)        51    1,217                43.5            1.3
+  Very high (>48)     53    9,698                70.6            3.3
+
+  Average violent crimes per neighborhood (2025) by vacancy tier
+  No open vacants ####### 8.1
+  Low (1–3)       ############### 16.2
+  Medium (4–12)   ######################## 26.2
+  High (13–48)    ######################################## 43.5
+  Very high (>48) ################################################################# 70.6
+
+  Hundred-block comparison
+  Block type                 Blocks  Violent crimes  Violent per block
+  -------------------------  ------  --------------  -----------------
+  Has ≥1 open vacant notice   3,078           3,260               1.06
+  No open vacant notice      25,351           5,375               0.21
+
+  Top 10 neighborhoods by open vacant-building notices
+   #  Neighborhood                     Vacants  Violent  Shootings  All crime
+  --  -------------------------------  -------  -------  ---------  ---------
+   1  Carrollton Ridge                     743      130         12        468
+   2  Broadway East                        714       58          6        386
+   3  Sandtown-Winchester                  588      157          4        697
+   4  Harlem Park                          438       91          5        413
+   5  Midtown-Edmondson                    334       45          1        164
+   6  Oliver                               325      102          3        542
+   7  Central Park Heights                 314      118         13        543
+   8  Penrose/Fayette Street Outreach      314       68          3        344
+   9  East Baltimore Midway                313       80          6        414
+  10  Mount Clare                          290       52          2        243
+
+  > Correlation between a neighborhood's vacant buildings and its violent crime: Spearman ρ =
+    0.74, Pearson r = 0.44 (strong). Blocks with a vacant building average 5.0× the violent
+    crime of blocks without one.
+
+  > The 10 neighborhoods above hold 38.5% of all open vacant notices and 10.4% of violent crime.
+    That makes them the shortlist for pairing DHCD's demolition/stabilisation budget with BPD's
+    place-based violence work.
+
+====================================================================================================
+ Q2. Liquor Outlets as Crime Hotspots
+ Stakeholder: Board of Liquor License Commissioners & Baltimore Police Department   (computed in 2.341ms)
+----------------------------------------------------------------------------------------------------
+  Do blocks with a liquor license see more crime than other blocks? Which license types and which
+  specific outlets sit on the highest-violence blocks? And does crime on those blocks happen
+  during late-night trading hours?
+
+  Join: 1,125 active 2025 liquor licenses → 1,122 parseable street addresses → 787 distinct
+  hundred-blocks; 555 licenses (49.5%) sit on a block with at least one 2025 crime.
+
+  Liquor-licensed blocks vs. all other blocks
+  Block type         Blocks  Crime / block  Violent / block
+  -----------------  ------  -------------  ---------------
+  Liquor-licensed       787           6.55             1.11
+  No liquor license  27,642           1.75             0.28
+  Ratio                               3.7×             4.0×
+
+  Violent crimes per block, by license establishment type (≥15 licenses)
+  Hotel/Motel (27)              ################################################### 2.00
+  Package goods only (174)      ################################################# 1.94
+  Tavern License (35)           ##################################### 1.44
+  Tavern (430)                  ########################### 1.07
+  Restaurant (348)              ######################## 0.95
+  Non-Profits only (49)         ################# 0.68
+  Adult (18)                    ############### 0.58
+  Blocks with no liquor license ####### 0.28
+
+  Top 10 liquor-licensed blocks by violent crime (2025)
+   #  Block                     Neighborhood                Licenses  Example outlet(s)                   Violent  All crime
+  --  ------------------------  --------------------------  --------  ----------------------------------  -------  ---------
+   1  0 LIGHT ST                Downtown                           2  R R TAQUERIA; RESIDENCE INN BALTI…       30        175
+   2  3700 FLEET ST             Brewers Hill                       1  SO BALTIMORE SPORTS BAR & GRILL          21        115
+   3  0 MARKET PL               Downtown                           1  POWER PLANT LIVE!                        20         92
+   4  2700 WASHINGTON BLVD      Morrell Park                       1  CLASE' DEFINE LOUNGE                     18         73
+   5  2400 LIBERTY HEIGHTS AVE  Mondawmin                          1  TGI FRIDAY'S                             17        117
+   6  2500 WASHINGTON BLVD      Morrell Park                       2  WASHINGTON BAR & LIQUOR; BERNIE'S…       15         29
+   7  700 WASHINGTON BLVD       Washington Village/Pigtown         1  SAMI WINES                               15         56
+   8  1700 THAMES ST            Fells Point                        7  SLAINTE IRISH PUB & RESTAURANT; K…       14         51
+   9  2400 FREDERICK AVE        Shipley Hill                       1  WESTSIDE LIQUORS                         13         48
+  10  3200 GREENMOUNT AVE       Abell                              1  KITTY'S LOUNGE                           13         33
+
+  Share of each group's crime by hour of day (local time)
+    6.3% |                                                #  #     #              
+    5.6% | :                                   :       #: #: #: #: #  #:          
+    5.0% |#:                                  #:       #: #: #: #: #: #: #:       
+    4.4% |#:                            #: #: #: #: #: #: #: #: #: #: #: #: #: #: 
+    3.8% |#: #  #                    #: #: #: #: #: #: #: #: #: #: #: #: #: #: #: 
+    3.1% |#: #: #:                #: #: #: #: #: #: #: #: #: #: #: #: #: #: #: #: 
+    2.5% |#: #: #: #:           : #: #: #: #: #: #: #: #: #: #: #: #: #: #: #: #: 
+    1.9% |#: #: #: #: #: #:  : #: #: #: #: #: #: #: #: #: #: #: #: #: #: #: #: #: 
+    1.3% |#: #: #: #: #: #: #: #: #: #: #: #: #: #: #: #: #: #: #: #: #: #: #: #: 
+    0.6% |#: #: #: #: #: #: #: #: #: #: #: #: #: #: #: #: #: #: #: #: #: #: #: #: 
+         +------------------------------------------------------------------------
+          00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 
+          # Liquor-licensed blocks    : All other blocks
+
+  > Liquor-licensed blocks average 4.0× the violent crime of unlicensed blocks. 21.4% of their
+    crime falls between 22:00 and 03:00, compared with 21.3% on other blocks.
+
+  > The hour-of-day profile on liquor blocks almost exactly matches the rest of the city, so the
+    excess is about place, not closing time. Restricting trading hours alone is unlikely to
+    help. Premises-level conditions (security plans, lighting, loitering enforcement) at the
+    watch-list outlets above are the better lever.
+
+====================================================================================================
+ Q3. 311 Service Equity Across Crime Levels
+ Stakeholder: Mayor's Office of Performance & Innovation (CitiStat)   (computed in 85.38ms)
+----------------------------------------------------------------------------------------------------
+  Are residents in the highest-crime neighborhoods getting slower or less reliable 311 service
+  (time-to-close, overdue rate) than residents in the safest neighborhoods?
+
+  Field-service requests exclude call-center information requests (ECC-*), city-initiated
+  'Proactive' sweeps and BGE-owned streetlight tickets, so only work that residents requested and
+  that an agency had to complete is counted. 270 neighborhoods with ≥100 such requests are split
+  into four equal groups (quartiles) by their 2025 violent-crime count.
+
+  Field-service 311 requests by neighborhood violent-crime quartile
+  Crime quartile    Nbhds  Violent  Requests  Closed  Median days  P90 days  Overdue
+  ----------------  -----  -------  --------  ------  -----------  --------  -------
+  Q1 lowest crime      68      244    39,921   96.2%         2.75      57.1    29.2%
+  Q2                   67      968    60,641   97.4%         2.99      52.0    26.1%
+  Q3                   68    2,027   121,080   98.0%         3.30      47.8    24.2%
+  Q4 highest crime     67    5,448   246,397   97.7%         3.22      38.9    22.4%
+
+  Median days to close a field-service 311 request
+  Q1 lowest crime  ##################################################### 2.75 d
+  Q2               ########################################################## 2.99 d
+  Q3               ################################################################ 3.30 d
+  Q4 highest crime ############################################################## 3.22 d
+
+  Share of requests closed late or still open past due date
+  Q1 lowest crime  ################################################################ 29.2%
+  Q2               ######################################################### 26.1%
+  Q3               ##################################################### 24.2%
+  Q4 highest crime ################################################# 22.4%
+
+  10 slowest-served neighborhoods (≥100 field requests)
+   #  Neighborhood                Median days  Overdue  Requests  Violent  Crime quartile  
+  --  --------------------------  -----------  -------  --------  -------  ----------------
+   1  Baltimore Peninsula                7.23    28.8%     1,095        1  Q1 lowest crime 
+   2  Orchard Ridge                      6.87    22.5%       395       15  Q2              
+   3  Mid-Govans                         5.82    21.1%     1,097       35  Q3              
+   4  Oaklee                             5.78    31.9%       282        3  Q1 lowest crime 
+   5  Garwyn Oaks                        5.26    31.0%       581       16  Q2              
+   6  Greenspring                        5.16    24.7%     2,292       39  Q3              
+   7  Mount Clare                        5.13    34.4%     3,943       52  Q4 highest crime
+   8  Westport                           5.07    26.5%     1,441       39  Q3              
+   9  O'Donnell Heights                  5.02    21.2%       259       25  Q3              
+  10  Northwest Community Action         5.02    21.2%     1,900       25  Q3              
+
+  > Requests in the highest-crime quartile take 17% longer to close than those in the
+    lowest-crime quartile (median 3.22 vs 2.75 days). Their overdue rate is 22.4% vs 29.2%.
+    Across neighborhoods, the rank correlation between violent crime and median close time is ρ
+    = 0.27 (weak).
+
+  > Mixed signal. The typical ticket in a high-crime neighborhood waits somewhat longer, but
+    fewer miss their due date (22.4% vs 29.2%). That pattern points to a different mix of
+    request types more than to neglect, so CitiStat should monitor it rather than treat it as an
+    equity failure.
+
+====================================================================================================
+ Q4. Vacancy-Driven Sanitation & Blight Demand
+ Stakeholder: Dept. of Public Works (Solid Waste) & DHCD Code Enforcement   (computed in 18.021ms)
+----------------------------------------------------------------------------------------------------
+  How much resident-reported blight (illegal dumping, dirty alleys, rats, open/unsecured
+  properties) is generated on blocks that contain vacant buildings? Does the demand rise with the
+  number of vacants on a block?
+
+  Blight = resident-reported sanitation and nuisance-property 311 types (city 'Proactive' sweeps
+  excluded). 119,821 blight requests were geocoded to a hundred-block and joined to 11,373 open
+  vacant notices on the same block key.
+
+  Hundred-blocks by number of open vacant-building notices
+  Vacants on block  Blocks  Blight requests  Per block  Blocks w/ any blight
+  ----------------  ------  ---------------  ---------  --------------------
+  0 vacants         25,351           54,766       2.16                 41.5%
+  1 vacant           1,298           16,969      13.07                 95.5%
+  2–4 vacants          982           21,888      22.29                 98.6%
+  5–9 vacants          506           14,116      27.90                 99.8%
+  10+ vacants          292           12,082      41.38                100.0%
+
+  Resident-reported blight requests per block (dose-response)
+  0 vacants   #### 2.16
+  1 vacant    ###################### 13.07
+  2–4 vacants ##################################### 22.29
+  5–9 vacants ############################################### 27.90
+  10+ vacants ##################################################################### 41.38
+
+  Blight request types: rate per 100 blocks, vacant vs. other blocks
+  311 request type           On vacant blocks  Per 100 vacant blks  Per 100 other blks    Lift
+  -------------------------  ----------------  -------------------  ------------------  ------
+  SW-Boarding                           3,878                126.0                 0.4  287.7×
+  SW-Cleaning                           5,351                173.8                 2.5   69.4×
+  HCD-Vacant Building                   6,201                201.5                 4.1   48.9×
+  HCD-Maintenance Structure             2,465                 80.1                 8.6    9.4×
+  HCD-Sanitation Property              16,988                551.9                59.1    9.3×
+  SW-Dirty Alley                       11,566                375.8                40.6    9.2×
+  HCD-Illegal Dumping                   5,383                174.9                21.1    8.3×
+  SW-Mixed Refuse                       7,613                247.3                43.1    5.7×
+  SW-Rat Rubout                         1,521                 49.4                 9.1    5.4×
+  SW-Dirty Street                       4,089                132.8                27.4    4.9×
+
+  > Blocks with vacant buildings are 10.8% of all blocks but generate 54.3% of resident-reported
+    blight requests. A block with 10+ vacants averages 19.2× the blight requests of a block with
+    none.
+
+  > 'SW-Boarding' has the largest over-representation on vacant blocks. Scheduling proactive
+    boarding, cleaning and rat-abatement crews from the vacant-notice list would meet that
+    demand before residents have to call it in.
+
+====================================================================================================
+ Q5. City Council District Priority Scorecard
+ Stakeholder: City Council & Dept. of Planning (budget / CIP prioritisation)   (computed in 29.503ms)
+----------------------------------------------------------------------------------------------------
+  Combining violence, vacancy, blight demand, liquor density and 311 service performance, which
+  council districts carry the heaviest combined burden and should be first in line for the next
+  capital-budget cycle?
+
+  Each neighborhood is assigned to the council district most of its 311 and vacant-notice records
+  report (0 neighborhoods could not be assigned). Six metrics are min-max scaled across the 14
+  districts and averaged with equal weight into a 0–100 burden score.
+
+  Council district scorecard (2025), ranked by composite burden score
+  Rank  District     Nbhds  Violent  Shootings  Vacants  Blight 311  Liquor  Med. days  Overdue  Score
+  ----  -----------  -----  -------  ---------  -------  ----------  ------  ---------  -------  -----
+     1  District 9      24      927         48    3,761      18,071      27       3.10    20.2%   66.8
+     2  District 7      23      924         33    2,108      15,248      38       3.84    23.3%   58.8
+     3  District 12     24      889         39    1,760      13,351      57       3.02    21.1%   53.9
+     4  District 11     17    1,026         30      326       5,033      63       2.94    26.0%   49.7
+     5  District 10     20      741         25      608      10,037      53       3.98    26.6%   48.4
+     6  District 1      17      592         13      137       9,097     140       2.80    24.9%   44.5
+     7  District 13     18      784         24      739      14,653      24       3.56    22.8%   42.5
+     8  District 6      27      554         30      906       8,739      19       3.52    25.7%   39.6
+     9  District 14     15      412         13      348       8,749      41       2.95    25.4%   29.5
+    10  District 8      22      456         15      291       7,770       8       3.80    24.1%   22.7
+    11  District 5      14      290         12      142       3,401      22       2.99    27.5%   21.9
+    12  District 2      13      419         11       55       3,631      38       3.05    24.8%   20.0
+    13  District 4      28      381         10      126       5,303      19       3.02    24.7%   18.5
+    14  District 3      17      305          4       66       3,459      36       3.00    23.7%   11.9
+
+  Composite burden score (0 = lowest district on every metric, 100 = highest on every metric)
+  District 9  ##################################################################### 67
+  District 7  ############################################################# 59
+  District 12 ######################################################## 54
+  District 11 ################################################### 50
+  District 10 ################################################## 48
+  District 1  ############################################## 45
+  District 13 ############################################ 42
+  District 6  ######################################### 40
+  District 14 ############################## 29
+  District 8  ####################### 23
+  District 5  ####################### 22
+  District 2  ##################### 20
+  District 4  ################### 18
+  District 3  ############ 12
+
+  > Highest combined burden: District 9 (score 67, driven most by shootings); District 7 (score
+    59, driven most by violent crime); and District 12 (score 54, driven most by violent crime).
+
+  > Note: the score uses raw counts, not rates, because Open Baltimore does not publish
+    population by district. It ranks where the volume of need is, which is what capital
+    budgeting needs. It is not a per-resident risk measure.
+
+====================================================================================================
+ Engine runtime & memory profile
+----------------------------------------------------------------------------------------------------
+
+  Pipeline stages
+  Stage                        Wall time  Live heap after (post-GC)
+  ---------------------------  ---------  -------------------------
+  1. ingest (4 datasets ∥)        1.132s                   131.9 MB
+  2. join/index (map-reduce)        69ms                   138.4 MB
+  3. analyze (5 strategies ∥)       85ms                   138.4 MB
+
+  Go runtime memory statistics
+  Metric                                                    Value
+  ----------------------------------------------------  ---------
+  Worker goroutines per pool                                    8
+  GOMAXPROCS (OS threads running Go code)                       8
+  Typed records held in memory                            997,659
+  Unique interned strings                                  29,226
+  Live heap at end (HeapAlloc)                           138.4 MB
+  Total allocated over run (TotalAlloc)                 1450.4 MB
+  Memory obtained from OS (Sys)                          404.4 MB
+  GC cycles (incl. 1 forced per stage for measurement)         26
+  Total GC stop-the-world pause                           3.036ms
+  End-to-end time (excl. render)                           1.314s
+====================================================================================================

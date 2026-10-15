@@ -1,0 +1,7 @@
+ServiceRequestNum,SRType,MethodReceived,CreatedDate,SRStatus,StatusDate,DueDate,CloseDate,Agency,LastActivity,Outcome,Address,ZipCode,Neighborhood,CouncilDistrict,PoliceDistrict,PolicePost,Latitude,Longitude,IsDeleted
+25-1,HCD-Illegal Dumping,Phone,2025/03/01 12:00:00+00,Closed,,2025/03/05 12:00:00+00,2025/03/03 12:00:00+00,Housing,,,"2113 WILKENS AVE, Baltimore City, 21223",21223,Carrollton Ridge,9,,,39.28,-76.64,0
+25-2,SW-Dirty Alley,Phone,2025/03/01 12:00:00+00,Closed,,2025/03/02 12:00:00+00,2025/03/06 12:00:00+00,Public Works,,,"2101 WILKENS AVE, Baltimore City, 21223",21223,Carrollton Ridge,9,,,39.28,-76.64,0
+25-3,SW-Rat Rubout,Phone,2025/03/01 12:00:00+00,Closed,,2025/03/10 12:00:00+00,2025/03/02 12:00:00+00,Public Works,,,"3210 GREENMOUNT AVE, Baltimore City, 21218",21218,Abell,14,,,39.32,-76.60,0
+25-4,TRM-Potholes,Phone,2025/03/01 12:00:00+00,Closed,,2025/03/10 12:00:00+00,2025/03/02 12:00:00+00,Transportation,,,"110 HOMELAND AVE, Baltimore City, 21212",21212,Homeland,4,,,39.35,-76.61,0
+25-5,ECC-Information Request,Phone,2025/03/01 12:00:00+00,Closed,,,,Call Center,,,,,,,,,,,0
+25-6,TRM-Potholes,Phone,2025/03/01 12:00:00+00,Closed,,,,Transportation,,,"110 HOMELAND AVE, Baltimore City, 21212",21212,Homeland,4,,,39.35,-76.61,1

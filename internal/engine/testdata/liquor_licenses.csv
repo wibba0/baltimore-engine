@@ -1,0 +1,4 @@
+LLKey,CorpKey,LicenseClass,SubClass,LicenseNumber,LicenseDate,LicenseEndDate,LicenseYear,LicenseFee,CertificateNumber,LicenseStatus,LicenseeFirstName,LicenseeLastName,TradeName,CorpName,EstablishmentDesc,DayPerWeek,Description,AddrStreet,AddrZip,ESRI_OID
+1,1,LBD7,BWL,271,,,2025,1320,1,Renewed,A,B,KITTY'S LOUNGE,PAN INC,Tavern,7 days,"Beer, Wine & Liquor",3208-10 GREENMOUNT AVENUE,21218,1
+1,1,LBD7,BWL,271,,,2025,1320,1,Renewed,C,D,KITTY'S LOUNGE,PAN INC,Tavern,7 days,"Beer, Wine & Liquor",3208-10 GREENMOUNT AVENUE,21218,2
+2,2,LBD7,BWL,300,,,2024,1320,1,Renewed,E,F,OLD PLACE,OLD INC,Tavern,7 days,"Beer, Wine & Liquor",100 HOMELAND AVENUE,21212,3

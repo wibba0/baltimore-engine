@@ -1,0 +1,5 @@
+{"type":"FeatureCollection","features":[
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.649,39.2808]},"properties":{"NoticeNum":"1A","DateNotice":1279378200000,"Council_District":9,"Neighborhood":"Carrollton Ridge","Address":"2113 WILKENS AVE","HousingMarketTypology2023":"J"}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.649,39.2808]},"properties":{"NoticeNum":"2A","DateNotice":1279378200000,"Council_District":9,"Neighborhood":"Carrollton Ridge","Address":"2109 WILKENS AVE","HousingMarketTypology2023":"J"}},
+{"type":"Feature","geometry":null,"properties":{"NoticeNum":"3A","DateNotice":1279378200000,"Council_District":14,"Neighborhood":"Abell","Address":"3215 GREENMOUNT AVE","HousingMarketTypology2023":"C"}}
+]}
