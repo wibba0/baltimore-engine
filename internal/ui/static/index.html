@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Baltimore Engine</title>
+<style>
+/*REPORT_CSS*/
+
+/* ---- app shell (overrides report defaults where needed) ---- */
+:root{--accent:#2a6fdb;--accent-fg:#fff;--side:#efefec;--warn:#b54708;--chip:#e7eefc}
+@media (prefers-color-scheme:dark){:root{--side:#18181b;--accent:#5b8ff0;--chip:#1f2a44;--warn:#f5a14a}}
+html,body{height:100%}
+body{margin:0;overflow:hidden}
+.app{display:grid;grid-template-rows:auto 1fr;height:100vh}
+.top{display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:1px solid var(--line);background:var(--card)}
+.mark{width:30px;height:30px;border-radius:7px;background:linear-gradient(160deg,#1c2b4a,#0e1626);display:flex;align-items:flex-end;justify-content:center;gap:3px;padding:6px 5px;box-sizing:border-box}
+.mark i{display:block;width:4px;background:#f2b631;border-radius:1px}
+.top h1{font-size:17px;margin:0;line-height:1.2}
+.top .tag{color:var(--muted);font-size:12.5px}
+.pill{margin-left:auto;font-size:12px;padding:4px 10px;border-radius:999px;background:var(--chip);color:var(--fg);white-space:nowrap}
+.shell{display:grid;grid-template-columns:300px 1fr;min-height:0}
+.side{background:var(--side);border-right:1px solid var(--line);overflow-y:auto;padding:16px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
+.panel h4{margin:0 0 10px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.q{display:flex;gap:8px;align-items:flex-start;padding:5px 0;font-size:13.5px;line-height:1.35;cursor:pointer;font-weight:400;margin:0}
+.q input{margin-top:2px}
+.q small{display:block;color:var(--muted);font-size:11.5px}
+.links{font-size:12px;margin-top:6px}.links a{color:var(--accent);cursor:pointer;margin-right:10px;text-decoration:none}
+.slider{display:flex;align-items:center;gap:10px;margin-top:4px}.slider input{flex:1}
+.slider b{min-width:22px;text-align:right;font-variant-numeric:tabular-nums}
+.hint{font-size:11.5px;color:var(--muted);margin-top:4px}
+button{font:inherit;font-size:13.5px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--fg);padding:8px 12px;cursor:pointer;width:100%;margin-top:8px}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);color:var(--accent-fg);border-color:transparent;font-weight:600;padding:10px 12px}
+button.primary:hover{filter:brightness(1.08)}
+button:disabled{opacity:.55;cursor:default;filter:none}
+.status{font-size:12.5px;color:var(--muted);margin-top:8px;min-height:1em}
+.status.err{color:var(--warn)}
+.files{font-size:12.5px;margin:6px 0 0;padding:0;list-style:none}
+.files li{display:flex;justify-content:space-between;gap:8px;padding:2px 0}.files li span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.files li span:last-child{color:var(--muted);font-variant-numeric:tabular-nums}
+pre.log{font-size:11px;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px;max-height:140px;overflow:auto;white-space:pre-wrap;margin:8px 0 0;display:none}
+.srcs a{display:block;font-size:12.5px;color:var(--accent);text-decoration:none;padding:2px 0}
+.content{display:grid;grid-template-rows:auto 1fr;min-height:0;position:relative}
+.tabs{display:flex;gap:2px;padding:0 20px;border-bottom:1px solid var(--line);background:var(--card);overflow-x:auto}
+.tab{border:0;background:none;width:auto;margin:0;border-radius:0;padding:12px 14px;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;font-weight:500}
+.tab:hover{color:var(--fg);border-color:transparent;border-bottom-color:var(--line)}
+.tab.on{color:var(--fg);border-bottom-color:var(--accent)}
+.view{overflow-y:auto;padding:22px 28px 60px}
+.view>div{max-width:1050px;margin:0 auto}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px}
+.kpi .v{font-size:24px;font-weight:650;font-variant-numeric:tabular-nums;line-height:1.2}
+.kpi .l{font-size:12px;color:var(--muted);margin-top:2px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.qc{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;cursor:pointer;display:flex;flex-direction:column}
+.qc:hover{border-color:var(--accent)}
+.qc .n{font-size:12px;color:var(--accent);font-weight:650}
+.qc h3{margin:2px 0 2px;font-size:15.5px;text-transform:none;letter-spacing:0;color:var(--fg)}
+.qc .s{font-size:12px;color:var(--muted);margin-bottom:8px}
+.qc p{font-size:13.5px;margin:0 0 8px}
+.qc .go{margin-top:auto;font-size:12.5px;color:var(--accent)}
+.block{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin:16px 0}
+.qhead .n{color:var(--accent);font-weight:650;font-size:13px}
+.qhead h2{font-size:22px;margin:2px 0 4px}
+.qhead .meta{margin-bottom:6px}
+.qhead .ask{font-weight:600;margin:10px 0 0}
+h2.sec{font-size:16px;margin:24px 0 4px}
+.empty{color:var(--muted);text-align:center;padding:80px 20px}
+.overlay{position:absolute;inset:0;background:color-mix(in srgb,var(--bg) 70%,transparent);display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;z-index:5;font-size:14px;color:var(--muted)}
+.overlay.on{display:flex}
+.spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (max-width:860px){.shell{grid-template-columns:1fr}.side{display:none}.kpis{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div class="mark"><i style="height:7px"></i><i style="height:12px"></i><i style="height:9px"></i><i style="height:17px"></i></div>
+    <div><h1>Baltimore Intelligence Engine</h1><div class="tag">Multi-dataset analysis of Open Baltimore data</div></div>
+    <span class="pill" id="src">Loading…</span>
+  </div>
+  <div class="shell">
+    <div class="side">
+      <div class="panel">
+        <h4>Research questions</h4>
+        <div id="qs"></div>
+        <div class="links"><a id="all">Select all</a><a id="none">Clear</a></div>
+      </div>
+      <div class="panel">
+        <h4>Concurrency</h4>
+        <label for="workers" style="font-size:13.5px;font-weight:400">Worker goroutines per pool</label>
+        <div class="slider"><input type="range" id="workers" min="1" max="8" value="8"><b id="wv">8</b></div>
+        <div class="hint" id="cpuhint"></div>
+        <button class="primary" id="run">Run analysis</button>
+        <div class="status" id="status"></div>
+      </div>
+      <div class="panel">
+        <h4>Data</h4>
+        <div style="font-size:13.5px" id="srcfull"></div>
+        <ul class="files" id="files"></ul>
+        <button id="reveal">Show data folder</button>
+        <button id="fetch">Download latest from Open Baltimore</button>
+        <div class="hint">Downloads about 310 MB (≈2 min). The bundled snapshot stays available.</div>
+        <pre class="log" id="log"></pre>
+      </div>
+      <div class="panel">
+        <h4>Export</h4>
+        <button id="export">Save report as HTML…</button>
+        <div class="status" id="exstatus"></div>
+      </div>
+      <div class="panel srcs">
+        <h4>Dataset sources</h4>
+        <div id="srcs"></div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="tabs" id="tabs"></div>
+      <div class="view" id="view"><div class="empty">Starting…</div></div>
+      <div class="overlay" id="busy"><div class="spin"></div><div id="busytext">Ingesting ~1M records…</div></div>
+    </div>
+  </div>
+</div>
+<script>
+const token = new URLSearchParams(location.search).get('t') || '';
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt = n => Number(n).toLocaleString();
+let info = null, result = null, tab = 'overview';
+const history = [];
+
+async function api(path, body) {
+  const r = await fetch(path, {method: body === undefined ? 'GET' : 'POST',
+    headers: {'X-Token': token, 'Content-Type': 'application/json'},
+    body: body === undefined ? undefined : JSON.stringify(body)});
+  const j = await r.json().catch(() => ({error: r.statusText}));
+  if (!r.ok) throw new Error(j.error || r.statusText);
+  return j;
+}
+
+function size(b) { return b > 1e6 ? (b/1e6).toFixed(1) + ' MB' : (b/1e3).toFixed(0) + ' KB'; }
+
+async function loadInfo() {
+  info = await api('/api/info');
+  $('src').textContent = info.dataSource;
+  $('srcfull').textContent = info.dataSource;
+  $('files').innerHTML = (info.files || []).map(f => `<li><span>${esc(f.name)}</span><span>${size(f.size)}</span></li>`).join('');
+  $('srcs').innerHTML = info.datasets.map(d => `<a href="${esc(d.url)}" target="_blank">${esc(d.name)} ↗</a>`).join('');
+  const w = $('workers');
+  if (!$('qs').children.length) {
+    $('qs').innerHTML = info.questions.map(q =>
+      `<label class="q"><input type="checkbox" value="${q.number}" checked><span>Q${q.number}. ${esc(q.title)}<small>${esc(q.stakeholder)}</small></span></label>`).join('');
+    w.max = info.cpus; w.value = info.cpus; $('wv').textContent = info.cpus;
+    $('cpuhint').textContent = `This Mac has ${info.cpus} CPU cores. Try 1 vs ${info.cpus} and compare on the Performance tab.`;
+  }
+}
+
+function selected() { return [...document.querySelectorAll('#qs input:checked')].map(i => +i.value); }
+
+async function run() {
+  const qs = selected();
+  if (!qs.length) { setStatus('Select at least one question.', true); return; }
+  $('run').disabled = true; $('busy').classList.add('on');
+  $('busytext').textContent = `Ingesting ~1M records with ${$('workers').value} workers…`;
+  setStatus('Running…');
+  try {
+    result = await api('/api/run', {questions: qs, workers: +$('workers').value});
+    const ingest = result.stages.find(s => s.name.startsWith('1.'));
+    history.unshift({n: history.length + 1, workers: result.workers, ingest: ingest ? ingest.ms : 0,
+      total: result.totalMs, heap: result.liveHeapMB, qs: qs.length});
+    setStatus(`Done in ${(result.totalMs/1000).toFixed(2)} s · ${fmt(result.records)} records`);
+    $('src').textContent = result.dataSource;
+    if (tab !== 'overview' && tab !== 'perf' && !result.sections.some(s => 'q' + s.number === tab)) tab = 'overview';
+    render();
+  } catch (e) {
+    setStatus(e.message, true);
+  } finally {
+    $('run').disabled = false; $('busy').classList.remove('on');
+  }
+}
+
+function setStatus(t, err) { const s = $('status'); s.textContent = t; s.className = 'status' + (err ? ' err' : ''); }
+
+function render() {
+  const tabs = [['overview', 'Overview']].concat(result.sections.map(s => ['q' + s.number, 'Q' + s.number + ' · ' + s.title]), [['perf', 'Performance']]);
+  $('tabs').innerHTML = tabs.map(([id, label]) => `<button class="tab${id === tab ? ' on' : ''}" data-tab="${id}">${esc(label)}</button>`).join('');
+  document.querySelectorAll('.tab').forEach(b => b.onclick = () => { tab = b.dataset.tab; render(); $('view').scrollTop = 0; });
+  let h = '';
+  if (tab === 'overview') h = overview();
+  else if (tab === 'perf') h = perf();
+  else { const s = result.sections.find(s => 'q' + s.number === tab); h = question(s); }
+  $('view').innerHTML = '<div>' + h + '</div>';
+  document.querySelectorAll('.qc').forEach(c => c.onclick = () => { tab = c.dataset.tab; render(); $('view').scrollTop = 0; });
+}
+
+function kpis() {
+  return `<div class="kpis">
+    <div class="kpi"><div class="v">${fmt(result.records)}</div><div class="l">records joined</div></div>
+    <div class="kpi"><div class="v">${(result.totalMs/1000).toFixed(2)} s</div><div class="l">end-to-end time</div></div>
+    <div class="kpi"><div class="v">${result.liveHeapMB.toFixed(0)} MB</div><div class="l">live heap</div></div>
+    <div class="kpi"><div class="v">${result.workers}</div><div class="l">workers per pool</div></div></div>`;
+}
+
+function overview() {
+  const cards = result.sections.map(s => `<div class="qc" data-tab="q${s.number}">
+      <div class="n">Q${s.number}</div><h3>${esc(s.title)}</h3><div class="s">${esc(s.stakeholder)}</div>
+      ${(s.findings || []).slice(0, 1).map(f => `<p>${esc(f)}</p>`).join('')}
+      <div class="go">Open full analysis →</div></div>`).join('');
+  return `${kpis()}<h2 class="sec">Key findings</h2><p class="meta" style="margin-top:0">${esc(result.subtitle)}</p>
+    <div class="cards">${cards}</div>
+    <h2 class="sec">Data provenance &amp; ingestion</h2><div class="block">${result.preamble}</div>`;
+}
+
+function question(s) {
+  return `<div class="block qhead"><div class="n">Question ${s.number}</div><h2>${esc(s.title)}</h2>
+    <div class="meta">Stakeholder: ${esc(s.stakeholder)} · computed in ${s.elapsedMs.toFixed(2)} ms</div>
+    <p class="ask">${esc(s.question)}</p></div><div class="block">${s.html}</div>`;
+}
+
+function perf() {
+  const max = Math.max(...result.stages.map(s => s.ms), 1);
+  const bars = result.stages.map(s => `<div class="bar"><span class="l">${esc(s.name)}</span><span class="t"><div class="f" style="width:${(s.ms/max*100).toFixed(1)}%"></div></span><span class="v">${s.ms.toFixed(0)} ms</span></div>`).join('');
+  const rows = history.map(r => `<tr><td class="n">${r.n}</td><td class="n">${r.workers}</td><td class="n">${r.qs}</td><td class="n">${r.ingest.toFixed(0)} ms</td><td class="n">${r.total.toFixed(0)} ms</td><td class="n">${r.heap.toFixed(1)} MB</td></tr>`).join('');
+  return `${kpis()}
+    <div class="block"><h3 style="margin-top:0">Pipeline stages (this run)</h3>${bars}
+      <p class="meta" style="margin:10px 0 0">GC: ${result.numGC} cycles, ${result.gcPauseMs.toFixed(2)} ms total stop-the-world pause.</p></div>
+    <div class="block"><h3 style="margin-top:0">Run history: compare worker counts</h3>
+      <div class="tw"><table><tr><th class="n">Run</th><th class="n">Workers</th><th class="n">Questions</th><th class="n">Ingest</th><th class="n">Total</th><th class="n">Live heap</th></tr>${rows}</table></div>
+      <p class="meta" style="margin:10px 0 0">The bundled snapshot is gzip-compressed, and decompressing one stream is sequential, so worker scaling shows most clearly with downloaded (uncompressed) data.</p></div>
+    <div class="block">${result.appendix}</div>`;
+}
+
+async function startFetch() {
+  if (!confirm('Download the latest datasets from data.baltimorecity.gov (~310 MB, about 2 minutes)?')) return;
+  try { await api('/api/fetch', {}); } catch (e) { alert(e.message); return; }
+  $('fetch').disabled = true; $('log').style.display = 'block';
+  const poll = async () => {
+    const s = await api('/api/fetch/status');
+    $('log').textContent = s.lines.join('\n'); $('log').scrollTop = 1e9;
+    if (s.running) { setTimeout(poll, 700); return; }
+    $('fetch').disabled = false;
+    if (s.error) { $('log').textContent += '\nError: ' + s.error; return; }
+    $('log').textContent += '\n✓ Download complete. Re-running analysis on fresh data…';
+    await loadInfo(); run();
+  };
+  poll();
+}
+
+$('workers').oninput = e => $('wv').textContent = e.target.value;
+$('run').onclick = run;
+$('all').onclick = () => document.querySelectorAll('#qs input').forEach(i => i.checked = true);
+$('none').onclick = () => document.querySelectorAll('#qs input').forEach(i => i.checked = false);
+$('fetch').onclick = startFetch;
+$('reveal').onclick = () => api('/api/reveal-data', {}).catch(e => alert(e.message));
+$('export').onclick = async () => {
+  try { const r = await api('/api/export', {}); $('exstatus').textContent = 'Saved to ' + r.path; $('exstatus').className = 'status'; }
+  catch (e) { $('exstatus').textContent = e.message; $('exstatus').className = 'status err'; }
+};
+
+loadInfo().then(() => info.dataReady ? run() : ($('view').innerHTML = '<div class="empty">No data found. Use “Download latest from Open Baltimore”.</div>'))
+  .catch(e => { $('view').innerHTML = `<div class="empty">Could not start: ${esc(e.message)}</div>`; });
+</script>
+</body>
+</html>

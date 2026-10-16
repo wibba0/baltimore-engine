@@ -6,6 +6,10 @@ This program **ingests four raw public datasets from the [Baltimore City Open Da
 
 It is written in **Go 1.22+ using only the standard library**: no third-party modules, nothing to `go get`, and builds offline.
 
+There are two ways to use it:
+- **Command line** (`./run.sh`): prints the full report in the terminal. Needs only Go.
+- **Desktop app** (`Baltimore Engine.app`): a double-clickable macOS app with an interactive dashboard. See [§1a](#1a-desktop-app-macos).
+
 ---
 
 ## 1. Quick start (macOS)
@@ -26,6 +30,8 @@ That's it. The repository ships with a gzipped snapshot of all four datasets in 
 |---|---|
 | `./run.sh` | Build, then print the full colorized report to the terminal |
 | `./run.sh html` | Build, write `report.html` (web UI version of the report), and open it in your browser |
+| `./run.sh ui` | Open the interactive dashboard in your web browser (Ctrl-C to stop) |
+| `./run.sh app` | Build the macOS desktop app, `dist/Baltimore Engine.app` (see §1a) |
 | `./run.sh test` | `go vet` plus all unit and integration tests **with the race detector** |
 | `./run.sh bench` | Time the ingest stage at 1, 2, 4 and 8 worker goroutines |
 | `./run.sh unpack` | Gunzip the snapshot. Plain files make ingest fully parallel (see §6) |
@@ -59,6 +65,61 @@ go build -o bin/baltimore-engine ./cmd/baltimore-engine
 
 ---
 
+## 1a. Desktop app (macOS)
+
+`Baltimore Engine.app` is a native macOS application. It opens its own window, with a Dock icon and standard menus, and hosts an interactive dashboard:
+
+- **Sidebar controls**
+  - choose which of the five research questions to run
+  - set the number of worker goroutines with a slider
+  - **Run analysis**
+  - download the latest data from Open Baltimore, with live progress
+  - open the data folder
+  - export the report as a standalone HTML file
+- **Tabs**
+  - **Overview**: headline metrics, a card per question with its key finding, and data provenance
+  - **Q1–Q5**: full tables, bar charts and findings for each question
+  - **Performance**: per-stage timing bars, GC statistics, and a run history for comparing worker counts
+
+The app is self-contained: the data snapshot is inside the bundle, and it needs no Go, Terminal or internet to run. It's a universal binary, so it runs on Apple-silicon and Intel Macs with **macOS 13 (Ventura) or newer**.
+
+### Build it
+
+Building needs Go plus the Xcode Command Line Tools. If those are missing, install them with `xcode-select --install`.
+
+```bash
+./run.sh app
+```
+
+This produces:
+- `dist/Baltimore Engine.app`: double-click to run, or drag it to Applications
+- `dist/Baltimore-Engine-macOS.zip`: about 59 MB, the file to share or upload
+
+### Opening it on another Mac (Gatekeeper)
+
+The app is **ad-hoc signed, not notarized by Apple** (notarization requires a paid Apple Developer account). The first time someone opens it after downloading, macOS will refuse with a message like *"Apple could not verify 'Baltimore Engine' is free of malware."* To allow it once:
+
+1. Unzip `Baltimore-Engine-macOS.zip` and double-click **Baltimore Engine.app**. Dismiss the warning with **Done**.
+2. Open **System Settings → Privacy & Security**, scroll down to the message about "Baltimore Engine", and click **Open Anyway**. Confirm with your password.
+
+After that it opens normally. Alternatively, run this in Terminal to remove the quarantine flag that triggers the warning:
+
+```bash
+xattr -dr com.apple.quarantine "Baltimore Engine.app"
+```
+
+### How it works
+
+- **`cmd/baltimore-app`** is a small cgo program. It starts the dashboard server (`internal/ui`) on a random `127.0.0.1` port, then runs a Cocoa event loop with an `NSWindow` containing a `WKWebView` (the Safari engine) pointed at that server.
+- **Objective-C** (`window_darwin.m`) is limited to the window, the menus and native alert dialogs. All analysis is the same Go engine the CLI uses.
+- **`internal/ui`** serves an embedded single-page dashboard and a small JSON API.
+  - Every API call requires a random per-launch token, so other programs or web pages can't drive it.
+  - Analyses are serialized with a mutex, since each run already uses every core.
+  - "Download latest" runs `fetch` in a background goroutine, writing to `~/Library/Application Support/Baltimore Engine/data`. Once that set is complete, it takes precedence over the bundled snapshot.
+- **The command-line build stays pure Go.** The app package carries a `darwin && cgo` build constraint, so `./run.sh`, `go build ./...` and `go test ./...` still work on machines without a C compiler.
+
+---
+
 ## 2. How to verify it works
 
 1. **Build and run:** `./run.sh` should print the report header, a dataset ingestion table, sections Q1–Q5, and a runtime/memory appendix. It should finish in about 1–2 seconds on an Apple-silicon Mac. A reference copy of the expected output is in [`docs/sample_output.txt`](docs/sample_output.txt).
@@ -71,6 +132,7 @@ go build -o bin/baltimore-engine ./cmd/baltimore-engine
    - **Race checking:** everything runs under `-race`.
 3. **Concurrency:** `./run.sh bench` (then `./run.sh unpack && ./run.sh bench` to see chunked-parse scaling).
 4. **Web UI:** `./run.sh html` opens the same report as a responsive HTML page with bar charts and an hour-of-day histogram.
+5. **Desktop app:** `./run.sh app`, then double-click `dist/Baltimore Engine.app`. The dashboard runs all five questions automatically on launch.
 
 ---
 
@@ -247,7 +309,11 @@ Go is garbage-collected, so the design focuses on **allocating less, holding les
 ## 8. Project layout
 
 ```
-cmd/baltimore-engine/main.go     CLI: `run` (default) and `fetch` subcommands
+cmd/baltimore-engine/main.go     CLI: `run` (default), `fetch` and `ui` subcommands
+cmd/baltimore-app/               native macOS app: Cocoa window + WKWebView (cgo/Objective-C)
+internal/ui/                     dashboard server: JSON API + embedded single-page UI
+scripts/build-app.sh             builds, signs and zips "Baltimore Engine.app"
+tools/mkicon/                    draws the app icon
 internal/fetch/                  concurrent ArcGIS REST downloader → raw CSV / GeoJSON
 internal/ingest/
   source.go                      Source strategy + Open() factory (CSV, GeoJSON, gzip)

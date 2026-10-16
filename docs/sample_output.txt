@@ -1,6 +1,6 @@
 ====================================================================================================
                             Baltimore Multi-Dataset Intelligence Report
-               Open Baltimore data · calendar year 2025 · generated 2026-10-09 08:30
+               Open Baltimore data · calendar year 2025 · generated 2026-10-15 20:06
 ====================================================================================================
 
   Source: Baltimore City Open Data Portal (data.baltimorecity.gov). Four independently maintained
@@ -11,14 +11,14 @@
   Datasets ingested (raw files → typed records)
   Dataset                  File                                Format   Raw rows     Kept  Filtered  Block-geocoded  Parse time
   -----------------------  ----------------------------------  -------  --------  -------  --------  --------------  ----------
-  Crime (NIBRS Group A)    crime_2025.csv.gz                   CSV        54,175   53,882       293           99.2%      167 ms
-  311 Service Requests     311_requests_2025.csv.gz            CSV       931,323  931,279        44           66.1%     1122 ms
-  Liquor Licenses          liquor_licenses.csv.gz              CSV        30,968    1,125    29,843           99.7%      110 ms
-  Vacant Building Notices  vacant_building_notices.geojson.gz  GeoJSON    11,396   11,373        23          100.0%      107 ms
+  Crime (NIBRS Group A)    crime_2025.csv.gz                   CSV        54,175   53,882       293           99.2%      178 ms
+  311 Service Requests     311_requests_2025.csv.gz            CSV       931,323  931,279        44           66.1%     1096 ms
+  Liquor Licenses          liquor_licenses.csv.gz              CSV        30,968    1,125    29,843           99.7%      105 ms
+  Vacant Building Notices  vacant_building_notices.geojson.gz  GeoJSON    11,396   11,373        23          100.0%      122 ms
 
 ====================================================================================================
  Q1. Vacant Buildings & Violent Crime
- Stakeholder: Mayor's Office & Dept. of Housing and Community Development (DHCD)   (computed in 750µs)
+ Stakeholder: Mayor's Office & Dept. of Housing and Community Development (DHCD)   (computed in 2.269ms)
 ----------------------------------------------------------------------------------------------------
   Do neighborhoods and blocks with more open vacant-building notices experience more violent
   crime, and which neighborhoods should be first in line for coordinated demolition/rehab +
@@ -73,7 +73,7 @@
 
 ====================================================================================================
  Q2. Liquor Outlets as Crime Hotspots
- Stakeholder: Board of Liquor License Commissioners & Baltimore Police Department   (computed in 2.341ms)
+ Stakeholder: Board of Liquor License Commissioners & Baltimore Police Department   (computed in 2.479ms)
 ----------------------------------------------------------------------------------------------------
   Do blocks with a liquor license see more crime than other blocks? Which license types and which
   specific outlets sit on the highest-violence blocks? And does crime on those blocks happen
@@ -138,7 +138,7 @@
 
 ====================================================================================================
  Q3. 311 Service Equity Across Crime Levels
- Stakeholder: Mayor's Office of Performance & Innovation (CitiStat)   (computed in 85.38ms)
+ Stakeholder: Mayor's Office of Performance & Innovation (CitiStat)   (computed in 86.556ms)
 ----------------------------------------------------------------------------------------------------
   Are residents in the highest-crime neighborhoods getting slower or less reliable 311 service
   (time-to-close, overdue rate) than residents in the safest neighborhoods?
@@ -194,7 +194,7 @@
 
 ====================================================================================================
  Q4. Vacancy-Driven Sanitation & Blight Demand
- Stakeholder: Dept. of Public Works (Solid Waste) & DHCD Code Enforcement   (computed in 18.021ms)
+ Stakeholder: Dept. of Public Works (Solid Waste) & DHCD Code Enforcement   (computed in 17.146ms)
 ----------------------------------------------------------------------------------------------------
   How much resident-reported blight (illegal dumping, dirty alleys, rats, open/unsecured
   properties) is generated on blocks that contain vacant buildings? Does the demand rise with the
@@ -244,7 +244,7 @@
 
 ====================================================================================================
  Q5. City Council District Priority Scorecard
- Stakeholder: City Council & Dept. of Planning (budget / CIP prioritisation)   (computed in 29.503ms)
+ Stakeholder: City Council & Dept. of Planning (budget / CIP prioritisation)   (computed in 30.315ms)
 ----------------------------------------------------------------------------------------------------
   Combining violence, vacancy, blight demand, liquor density and 311 service performance, which
   council districts carry the heaviest combined burden and should be first in line for the next
@@ -259,7 +259,7 @@
   ----  -----------  -----  -------  ---------  -------  ----------  ------  ---------  -------  -----
      1  District 9      24      927         48    3,761      18,071      27       3.10    20.2%   66.8
      2  District 7      23      924         33    2,108      15,248      38       3.84    23.3%   58.8
-     3  District 12     24      889         39    1,760      13,351      57       3.02    21.1%   53.9
+     3  District 12     24      889         39    1,760      13,351      57       3.02    21.1%   53.8
      4  District 11     17    1,026         30      326       5,033      63       2.94    26.0%   49.7
      5  District 10     20      741         25      608      10,037      53       3.98    26.6%   48.4
      6  District 1      17      592         13      137       9,097     140       2.80    24.9%   44.5
@@ -281,7 +281,7 @@
   District 1  ############################################## 45
   District 13 ############################################ 42
   District 6  ######################################### 40
-  District 14 ############################## 29
+  District 14 ############################## 30
   District 8  ####################### 23
   District 5  ####################### 22
   District 2  ##################### 20
@@ -300,11 +300,11 @@
 ----------------------------------------------------------------------------------------------------
 
   Pipeline stages
-  Stage                        Wall time  Live heap after (post-GC)
-  ---------------------------  ---------  -------------------------
-  1. ingest (4 datasets ∥)        1.132s                   131.9 MB
-  2. join/index (map-reduce)        69ms                   138.4 MB
-  3. analyze (5 strategies ∥)       85ms                   138.4 MB
+  Stage                                Wall time  Live heap after (post-GC)
+  -----------------------------------  ---------  -------------------------
+  1. ingest (4 datasets, parallel)        1.113s                   134.9 MB
+  2. join/index (map-reduce)                61ms                   138.1 MB
+  3. analyze (5 strategies, parallel)       87ms                   138.2 MB
 
   Go runtime memory statistics
   Metric                                                    Value
@@ -313,10 +313,10 @@
   GOMAXPROCS (OS threads running Go code)                       8
   Typed records held in memory                            997,659
   Unique interned strings                                  29,226
-  Live heap at end (HeapAlloc)                           138.4 MB
-  Total allocated over run (TotalAlloc)                 1450.4 MB
-  Memory obtained from OS (Sys)                          404.4 MB
+  Live heap at end (HeapAlloc)                           138.2 MB
+  Total allocated over run (TotalAlloc)                 1452.7 MB
+  Memory obtained from OS (Sys)                          412.6 MB
   GC cycles (incl. 1 forced per stage for measurement)         26
-  Total GC stop-the-world pause                           3.036ms
-  End-to-end time (excl. render)                           1.314s
+  Total GC stop-the-world pause                            2.38ms
+  End-to-end time (excl. render)                           1.284s
 ====================================================================================================

@@ -78,17 +78,36 @@ func (b *Builder) Build() (*Engine, error) {
 	if e.analyses == nil {
 		e.analyses = analysis.All()
 	}
-	if len(e.renderers) == 0 {
-		return nil, fmt.Errorf("engine: at least one output is required")
+	if e.workers < 1 {
+		return nil, fmt.Errorf("engine: workers must be ≥ 1")
 	}
 	return &e, nil
 }
 
-// Result exposes intermediate products (used by tests).
+// Result exposes intermediate products (used by tests and the UI).
 type Result struct {
 	Dataset *model.Dataset
 	Index   *index.Index
 	Report  *report.Report
+	Metrics Metrics
+}
+
+// Metrics summarises one run for dashboards.
+type Metrics struct {
+	Stages     []Stage
+	Total      time.Duration // ingest → analyze, excluding render
+	Workers    int
+	Records    int
+	LiveHeapMB float64
+	GCPause    time.Duration
+	NumGC      uint32
+}
+
+// Stage is the timing and live heap of one pipeline stage.
+type Stage struct {
+	Name   string
+	Dur    time.Duration
+	HeapMB float64
 }
 
 type stage struct {
@@ -104,7 +123,10 @@ func (e *Engine) Run(ctx context.Context) (*Result, error) {
 		defer debug.SetGCPercent(old)
 	}
 	var stages []stage
-	var ms runtime.MemStats
+	var ms, ms0 runtime.MemStats
+	// Runtime counters are cumulative for the process; snapshot them so a
+	// long-running host (the dashboard) reports per-run figures.
+	runtime.ReadMemStats(&ms0)
 	// mark records a stage's wall time, then forces a collection so the
 	// reported heap is the *live* working set rather than live + garbage
 	// awaiting the next GC cycle. The forced GC is excluded from stage time.
@@ -123,7 +145,7 @@ func (e *Engine) Run(ctx context.Context) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	mark("1. ingest (4 datasets ∥)", t)
+	mark("1. ingest (4 datasets, parallel)", t)
 
 	t = time.Now()
 	ix := index.Build(ds, e.workers, e.asOf.Unix())
@@ -131,7 +153,7 @@ func (e *Engine) Run(ctx context.Context) (*Result, error) {
 
 	t = time.Now()
 	sections := analysis.RunAll(&analysis.Input{DS: ds, IX: ix}, e.analyses)
-	mark("3. analyze (5 strategies ∥)", t)
+	mark("3. analyze (5 strategies, parallel)", t)
 
 	rep := &report.Report{
 		Title:    "Baltimore Multi-Dataset Intelligence Report",
@@ -142,7 +164,7 @@ func (e *Engine) Run(ctx context.Context) (*Result, error) {
 
 	runtime.ReadMemStats(&ms)
 	total := time.Since(t0)
-	rep.Appendix = appendix(stages, total, &ms, e.workers, interner.Len(), ds)
+	rep.Appendix = appendix(stages, total, &ms, &ms0, e.workers, interner.Len(), ds)
 
 	t = time.Now()
 	for _, o := range e.renderers {
@@ -150,8 +172,16 @@ func (e *Engine) Run(ctx context.Context) (*Result, error) {
 			return nil, err
 		}
 	}
-	mark("4. render", t)
-	return &Result{Dataset: ds, Index: ix, Report: rep}, nil
+	if len(e.renderers) > 0 {
+		mark("4. render", t)
+	}
+	m := Metrics{Total: total, Workers: e.workers, LiveHeapMB: mb(ms.HeapAlloc),
+		GCPause: time.Duration(ms.PauseTotalNs - ms0.PauseTotalNs), NumGC: ms.NumGC - ms0.NumGC,
+		Records: len(ds.Crimes) + len(ds.Requests) + len(ds.Liquor) + len(ds.Vacants)}
+	for _, s := range stages {
+		m.Stages = append(m.Stages, Stage{s.name, s.dur, mb(s.heap)})
+	}
+	return &Result{Dataset: ds, Index: ix, Report: rep, Metrics: m}, nil
 }
 
 func mb(b uint64) float64 { return float64(b) / (1 << 20) }
@@ -172,7 +202,7 @@ func provenance(ds *model.Dataset) []report.Element {
 	}
 }
 
-func appendix(stages []stage, total time.Duration, ms *runtime.MemStats, workers, interned int, ds *model.Dataset) []report.Element {
+func appendix(stages []stage, total time.Duration, ms, ms0 *runtime.MemStats, workers, interned int, ds *model.Dataset) []report.Element {
 	tbl := report.Table{
 		Title:       "Pipeline stages",
 		Headers:     []string{"Stage", "Wall time", "Live heap after (post-GC)"},
@@ -192,10 +222,10 @@ func appendix(stages []stage, total time.Duration, ms *runtime.MemStats, workers
 			{"Typed records held in memory", report.Int(recs)},
 			{"Unique interned strings", report.Int(interned)},
 			{"Live heap at end (HeapAlloc)", fmt.Sprintf("%.1f MB", mb(ms.HeapAlloc))},
-			{"Total allocated over run (TotalAlloc)", fmt.Sprintf("%.1f MB", mb(ms.TotalAlloc))},
+			{"Total allocated over run (TotalAlloc)", fmt.Sprintf("%.1f MB", mb(ms.TotalAlloc-ms0.TotalAlloc))},
 			{"Memory obtained from OS (Sys)", fmt.Sprintf("%.1f MB", mb(ms.Sys))},
-			{"GC cycles (incl. 1 forced per stage for measurement)", fmt.Sprint(ms.NumGC)},
-			{"Total GC stop-the-world pause", time.Duration(ms.PauseTotalNs).Round(time.Microsecond).String()},
+			{"GC cycles (incl. 1 forced per stage for measurement)", fmt.Sprint(ms.NumGC - ms0.NumGC)},
+			{"Total GC stop-the-world pause", time.Duration(ms.PauseTotalNs - ms0.PauseTotalNs).Round(time.Microsecond).String()},
 			{"End-to-end time (excl. render)", total.Round(time.Millisecond).String()},
 		},
 	}

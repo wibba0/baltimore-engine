@@ -6,6 +6,7 @@ import (
 	"html"
 	"io"
 	"math"
+	"strings"
 )
 
 // HTMLRenderer writes a single self-contained HTML page (no external assets)
@@ -63,6 +64,20 @@ func (h *HTMLRenderer) Render(out io.Writer, r *Report) error {
 	}
 	fmt.Fprint(w, "</main></body></html>\n")
 	return w.Flush()
+}
+
+// CSS returns the stylesheet used by HTML output, for embedding elsewhere.
+func CSS() string { return css }
+
+// Fragment renders elements to an HTML snippet (no <html>/<body>), so a UI
+// can drop report sections into its own page.
+func Fragment(els []Element) string {
+	var b strings.Builder
+	h := &HTMLRenderer{}
+	for _, el := range els {
+		h.element(&b, el)
+	}
+	return b.String()
 }
 
 func (h *HTMLRenderer) element(w io.Writer, el Element) {

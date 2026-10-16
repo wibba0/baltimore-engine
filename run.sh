@@ -3,6 +3,8 @@
 #
 #   ./run.sh            build, then print the full report in the terminal
 #   ./run.sh html       build, run, and write + open report.html
+#   ./run.sh ui         interactive dashboard in your web browser
+#   ./run.sh app        build the double-clickable macOS app (dist/Baltimore Engine.app)
 #   ./run.sh test       run unit + integration tests with the race detector
 #   ./run.sh bench      time the ingest stage at 1, 2, 4 and 8 workers
 #   ./run.sh fetch      re-download fresh raw data from data.baltimorecity.gov
@@ -39,6 +41,8 @@ cmd="${1:-run}"
 [[ $# -gt 0 ]] && shift
 case "$cmd" in
   run)    build; "$BIN" run "$@" ;;
+  ui)     build; "$BIN" ui "$@" ;;
+  app)    need_go; ./scripts/build-app.sh && open -R "dist/Baltimore Engine.app" ;;
   html)   build; "$BIN" run -html report.html "$@" >/dev/null; command -v open >/dev/null && open report.html || echo "wrote report.html" ;;
   test)   need_go; go vet ./... && go test -race -count=1 ./... ;;
   bench)  build
@@ -51,5 +55,5 @@ case "$cmd" in
   build)  build; echo "built $BIN" ;;
   --)     build; "$BIN" run "$@" ;;
   -h|--help|help) build; "$BIN" help; "$BIN" run -h ;;
-  *)      echo "unknown command: $cmd (try: run | html | test | bench | fetch | unpack | build)" >&2; exit 2 ;;
+  *)      echo "unknown command: $cmd (try: run | html | ui | app | test | bench | fetch | unpack | build)" >&2; exit 2 ;;
 esac

@@ -30,6 +30,17 @@ func resolve(dir string, names []string) (string, error) {
 	return "", fmt.Errorf("none of %v found in %s (run `./run.sh fetch` to download)", names, dir)
 }
 
+// Available reports whether dir holds a complete set of the four datasets
+// (in plain or gzipped form).
+func Available(dir string) bool {
+	for _, names := range [][]string{CrimeFiles, RequestFiles, LiquorFiles, VacantFiles} {
+		if _, err := resolve(dir, names); err != nil {
+			return false
+		}
+	}
+	return true
+}
+
 // loadOne opens a file through the Source factory and runs the pipeline.
 func loadOne[T any](ctx context.Context, dir string, names []string, label string, workers int,
 	mk func(*Header) ParseFunc[T], key func(*T) string) ([]T, model.IngestStats, error) {

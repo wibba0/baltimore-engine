@@ -3,6 +3,7 @@
 //
 //	baltimore-engine [run] [flags]   analyse data in ./data and print the report
 //	baltimore-engine fetch [flags]   (re)download raw datasets from Open Baltimore
+//	baltimore-engine ui [flags]      interactive dashboard in the default browser
 package main
 
 import (
@@ -10,6 +11,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/exec"
 	"os/signal"
 	"strconv"
 	"strings"
@@ -18,6 +20,7 @@ import (
 	"github.com/aidan/baltimore-engine/internal/engine"
 	"github.com/aidan/baltimore-engine/internal/fetch"
 	"github.com/aidan/baltimore-engine/internal/report"
+	"github.com/aidan/baltimore-engine/internal/ui"
 )
 
 func main() {
@@ -35,6 +38,8 @@ func main() {
 		err = run(ctx, args)
 	case "fetch":
 		err = fetchCmd(ctx, args)
+	case "ui":
+		err = uiCmd(ctx, args)
 	case "help", "-h", "--help":
 		usage()
 	default:
@@ -52,6 +57,7 @@ func usage() {
 Usage:
   baltimore-engine [run] [flags]     analyse ./data and print the report
   baltimore-engine fetch [flags]     download fresh raw data from data.baltimorecity.gov
+  baltimore-engine ui [flags]        open the interactive dashboard in your browser
 
 Run 'baltimore-engine run -h' or 'baltimore-engine fetch -h' for flags.
 `)
@@ -126,4 +132,22 @@ func fetchCmd(ctx context.Context, args []string) error {
 	workers := fs.Int("workers", 6, "concurrent HTTP page requests per dataset")
 	fs.Parse(args)
 	return fetch.All(ctx, fetch.Options{OutDir: *dataDir, Workers: *workers, Log: os.Stderr})
+}
+
+func uiCmd(ctx context.Context, args []string) error {
+	fs := flag.NewFlagSet("ui", flag.ExitOnError)
+	dataDir := fs.String("data", "data", "directory containing the bundled dataset files")
+	noOpen := fs.Bool("no-open", false, "print the URL instead of opening a browser")
+	fs.Parse(args)
+	srv := ui.New(ui.Config{BundledData: *dataDir, UserData: ui.DefaultUserData()})
+	url, err := srv.Start()
+	if err != nil {
+		return err
+	}
+	fmt.Fprintf(os.Stderr, "Dashboard running at %s\nPress Ctrl-C to stop.\n", url)
+	if !*noOpen {
+		exec.Command("open", url).Start()
+	}
+	<-ctx.Done()
+	return nil
 }

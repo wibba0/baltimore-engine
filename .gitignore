@@ -1,4 +1,5 @@
 bin/
+dist/
 report.html
 report.txt
 # Fresh downloads from `./run.sh fetch` (the gzipped snapshot is committed)
